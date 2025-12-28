@@ -1,53 +1,40 @@
 # 🎧 Mood Mixer
-
 ![Python](https://img.shields.io/badge/Python-3.9%2B-blue?logo=python)
 ![Streamlit](https://img.shields.io/badge/Streamlit-Web_App-FF4B4B?logo=streamlit)
 ![Spotify](https://img.shields.io/badge/Spotify-API-1DB954?logo=spotify)
-![License](https://img.shields.io/badge/License-MIT-green)
+![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)
 ![Status](https://img.shields.io/badge/Status-Live-success)
 
 **Mood Mixer** is a web application that automatically remixes Spotify playlists based on your **current mood**.
 
 How are you feeling today?  
-⚡ Energetic  
-😌 Chill  
-🎉 Party  
-💪 Workout  
-🧠 Focus  
-❤️ Romantic  
+⚡ Energetic • 😌 Chill • 🎉 Party • 💪 Workout • 🧠 Focus • ❤️ Romantic • ☔ Sad • 😄 Happy  
 
 Just paste a Spotify playlist link, choose your mood →  
-✨ **a brand new playlist is generated and added to your Spotify account in seconds.**
+✨ **a brand new remixed playlist is generated and added to your Spotify account in seconds.**
 
 ---
-
 ## 🚀 Live Demo
-👉 **https://mixer.alxishq.site**
-
-if link is not working try this 
-
+👉 **https://mixer.alxishq.site**  
+(if not working, try)  
 👉 **https://mood-mixer-alxishq.streamlit.app/**
 
 ---
-
 ## 🎬 Demo Preview (GIF)
-
-> N/A 
-> it will appear here automatically after development.
+> Coming soon!  
+> (Will be added automatically after final touches)
 
 ![Mood Mixer Demo](demo.gif)
 
 ---
-
 ## ✨ Features
-- 🎵 Official **Spotify Web API** integration  
-- 🧠 Real-time **mood-based song selection**  
-- ➕ New playlist is **directly added** to your Spotify library  
-- 🌐 No installation required — **runs in the browser**  
-- 🔐 Secure **Spotify OAuth** authentication  
+- 🎵 Official **Spotify Web API** integration
+- 🔀 Smart **playlist remixing** with mood-based shuffling
+- ➕ New playlist **directly added** to your Spotify library
+- 🌐 No installation required — **runs in the browser**
+- 🔐 Secure **Spotify OAuth** authentication
 
 ---
-
 ## 🛠️ Tech Stack
 - **Python**
 - **Streamlit** — Web interface
@@ -55,43 +42,40 @@ if link is not working try this
 - **Spotify OAuth 2.0**
 
 ---
-
 ## 📸 Site Screenshot
 ![Mood Mixer Screenshot](https://raw.githubusercontent.com/Sad_Always/mood-mixer-spotify/main/screenshot.png)
 
 ---
-
-## ⚠️ Disclaimer
-- This app only operates on **your own Spotify account**
-- Uses **official Spotify APIs** and authentication flow
+## ⚠️ Important Disclaimer
+- This app only works on **your own Spotify account**
+- Uses **official Spotify APIs** and secure authentication
 - No passwords or sensitive data are stored
-- The developer is **not responsible** for misuse
+- **The developer is not responsible** for any data loss, playlist changes, or issues arising from use
+
+**Use at your own risk.**
 
 ---
-
 ## 📄 License
-This project is licensed under the **MIT License**.
+This project is licensed under the **GNU General Public License v3.0** [](https://www.gnu.org/licenses/gpl-3.0.en.html).
 
 You are free to:
-- Use
-- Modify
-- Distribute
+- Use, study, and modify the code
+- Share and distribute it
 
-As long as the original license and copyright notice are included.
+But you must:
+- Keep the project **open source**
+- Release any modifications or derivative works under the **same GPL-3.0 license**
+- Include the original copyright notice and give credit to the author
+
+See the [LICENSE](LICENSE) file for full details.
 
 ---
-
 ## 👨‍💻 Author
-
 Made with ❤️ by **Sad_Always**  
 An **AlexisHQ** project  
-
 🌐 https://alxishq.site
 
 ---
-
 ## ⭐ Support
-If you like this project, don’t forget to **star the repository** ⭐  
-
-Ideas, feedback, and contributions are always welcome via  
-**Issues** and **Pull Requests** 🚀
+If you like this project, please **star the repository** ⭐  
+Your support means a lot!
