@@ -44,9 +44,6 @@ sp = spotipy.Spotify(auth=token_info["access_token"])
 user = sp.current_user()
 st.success(f"✅ Connected: **{user['display_name']}**")
 
-# Market (ülke kodu) - 404 hatasını önlemek için zorunlu
-market = user.get("country", "US")  # TR yoksa US fallback
-
 playlist_url = st.text_input("📋 Playlist link:", placeholder="https://open.spotify.com/playlist/...")
 mood = st.selectbox("🌈 Select a Mood:", [
     "Happy 😄", "Chill 😌", "Energetic ⚡", "Workout 💪",
@@ -67,12 +64,14 @@ mood_targets = {
 if st.button("🔥 MIX IT!") and playlist_url:
     with st.spinner("Spotify suggestions are being collected..."):
         try:
+            # Playlist ID çıkar
             match = re.search(r"playlist[/:]([A-Za-z0-9]{22})", playlist_url)
             if not match:
                 st.error("Invalid playlist link!")
                 st.stop()
             playlist_id = match.group(1)
 
+            # Şarkıları al
             tracks = sp.playlist_tracks(playlist_id)["items"]
             track_ids = [t["track"]["id"] for t in tracks if t["track"] and t["track"]["id"]]
 
@@ -83,35 +82,34 @@ if st.button("🔥 MIX IT!") and playlist_url:
             seed_tracks = random.sample(track_ids, 5)
             targets = mood_targets[mood]
 
-            # İlk deneme: Mood target'larla
+            # İlk deneme: target'lı çağrı (market olmadan)
             try:
                 recommendations = sp.recommendations(
                     seed_tracks=seed_tracks,
                     limit=50,
-                    market=market,
                     **targets
                 )
                 rec_tracks = recommendations["tracks"]
                 if len(rec_tracks) > 0:
                     st.info(f"Perfect match for {mood}! 🎯")
                 else:
-                    raise spotipy.SpotifyException(404, -1, "No results")
-            except spotipy.SpotifyException:
-                # Fallback: Sadece seed_tracks ile benzer şarkılar
-                st.info("Strong mood match not available in your region. Getting songs very similar to your playlist instead... 😊")
+                    raise Exception("No results")
+            except:
+                # Fallback: sadece seed_tracks ile (en güvenilir yöntem)
+                st.info("Strong mood match not available. Getting songs very similar to your playlist... 😊")
                 recommendations = sp.recommendations(
                     seed_tracks=seed_tracks,
-                    limit=50,
-                    market=market
+                    limit=50
                 )
                 rec_tracks = recommendations["tracks"]
 
             rec_ids = [track["id"] for track in rec_tracks]
 
             if len(rec_ids) == 0:
-                st.error("No suggestions found even with fallback. Try a different playlist!")
+                st.error("No suggestions found. Try a different playlist!")
                 st.stop()
 
+            # Yeni playlist
             new_playlist = sp.user_playlist_create(
                 user["id"],
                 name=f"Mood Mix: {mood} 🎯",
@@ -119,6 +117,7 @@ if st.button("🔥 MIX IT!") and playlist_url:
                 description="Prepared with Mood Mixer V2 🎧 https://mixer.alxishq.site"
             )
 
+            # Şarkıları ekle
             for i in range(0, len(rec_ids), 100):
                 sp.playlist_add_items(new_playlist["id"], rec_ids[i:i+100])
 
@@ -129,6 +128,6 @@ if st.button("🔥 MIX IT!") and playlist_url:
 
         except Exception as e:
             st.error(f"Unexpected error: {str(e)}")
-            st.info("Try again with a different mood or playlist.")
+            st.info("Try again with a different playlist or mood.")
 
 st.caption("Made with ❤️ by Sad_Always – Mood Mixer v2 A AlexisHq project.")
