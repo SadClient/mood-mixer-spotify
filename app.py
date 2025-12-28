@@ -10,7 +10,7 @@ st.set_page_config(page_title="Mood Mixer", page_icon="🎧", layout="centered")
 # Başlık ve açıklama
 st.title("🎧 Mood Mixer v2")
 st.markdown("**Herhangi bir Spotify playlistini istediğin moda göre otomatik karıştır!**")
-st.markdown("Spotify'ın kendi akıllı öneri sistemiyle daha iyi sonuçlar 🔥 (Audio features artık yok, ama bu daha iyi!)")
+st.markdown("Spotify'ın kendi akıllı öneri sistemiyle daha iyi sonuçlar 🔥")
 
 # Spotify OAuth ayarları
 sp_oauth = SpotifyOAuth(
@@ -107,15 +107,16 @@ if st.button("🔥 MIX IT! Yeni vibe hazırla") and playlist_url:
                 st.error("Playlistte en az 5 şarkı olmalı ki iyi öneri alınabilsin!")
                 st.stop()
 
-            # Rastgele 5 seed şarkı seç (Spotify max 5 seed kabul eder)
+            # Rastgele 5 seed şarkı seç
             seed_tracks = random.sample(track_ids, 5)
 
             # Mood parametrelerini al
             params = mood_params[mood]
-            params["limit"] = 50  # 50 şarkı önerisi
+            params["limit"] = 50
+            params["seed_tracks"] = seed_tracks
 
             # Recommendations al
-            recommendations = sp.recommendations(seed_tracks=seed_tracks, **params)
+            recommendations = sp.recommendations(**params)
 
             recommended_tracks = recommendations["tracks"]
             recommended_ids = [track["id"] for track in recommended_tracks]
@@ -146,4 +147,4 @@ if st.button("🔥 MIX IT! Yeni vibe hazırla") and playlist_url:
             st.info("Playlist herkese açık mı? Link doğru mu? Tekrar dene.")
 
 # Alt bilgi
-st.caption("Made with ❤️ by Sad_Always – Mood Mixer v2 (Recommendations powered) | https://alxishq.site")
+st.caption("Made with ❤️ by Sad_Always – Mood Mixer v2 (Spotify Recommendations) | https://alxishq.site")
