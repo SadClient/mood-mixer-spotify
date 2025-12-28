@@ -7,12 +7,15 @@ import random
 # Sayfa ayarları
 st.set_page_config(page_title="Mood Mixer", page_icon="🎧", layout="centered")
 
-# Custom CSS + alxishq tarzı
+# Custom CSS - blurlu şeffaf siyah arka plan + alxishq tarzı
 st.markdown("""
     <style>
     .main {
-        background: linear-gradient(135deg, #121212 0%, #1a1a1a 100%);
+        background: rgba(18, 18, 18, 0.95);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
         color: white;
+        min-height: 100vh;
     }
     .stButton>button {
         background: linear-gradient(90deg, #1DB954, #1ed760);
@@ -53,7 +56,7 @@ st.markdown("""
         text-align: center;
         color: #b3b3b3;
         font-size: 16px;
-        margin-top: 60px;
+        margin-top: 80px;
         font-weight: 500;
     }
     .caption strong {
@@ -61,13 +64,6 @@ st.markdown("""
         font-weight: bold;
     }
     </style>
-    """, unsafe_allow_html=True)
-
-# YENİ ÜST ANIMASYON - Mood Mixer'a özel, neon green equalizer wave (remix hissi 🔥)
-st.markdown("""
-    <div style="text-align: center; margin-bottom: 30px;">
-        <img src="https://imgur.com/gallery/black-white-photo-antwerp-IcQa4yl" width="450" style="border-radius: 20px; box-shadow: 0 8px 30px rgba(29, 185, 84, 0.4);">
-    </div>
     """, unsafe_allow_html=True)
 
 st.title("🎧 Mood Mixer v2")
@@ -192,7 +188,7 @@ if st.button("🔥 MIX IT! Create new vibe"):
         except Exception as e:
             st.error(f"Error: {str(e)}")
 
-# Güzelleştirilmiş alt yazı (alttaki animasyon kaldırıldı)
+# Güzel alt yazı
 st.markdown("""
     <div class="caption">
         Made with ❤️ by <strong>Sad_Always</strong><br>
