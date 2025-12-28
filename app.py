@@ -7,7 +7,7 @@ import random
 st.set_page_config(page_title="Mood Mixer", page_icon="ᯤ", layout="centered")
 
 st.title("🎧 Mood Mixer v2")
-st.markdown("**Customize your playlist with Spotify's smart recommendations to match your mood!** 🔥")
+st.markdown("**Shuffle and remix your playlist with a fresh vibe!** 🔥")
 
 # OAuth
 sp_oauth = SpotifyOAuth(
@@ -34,7 +34,6 @@ if "token_info" not in st.session_state:
         st.info("Press the Button, Connect by new tab.")
         st.stop()
 
-# Token refresh
 token_info = st.session_state.token_info
 if sp_oauth.is_token_expired(token_info):
     token_info = sp_oauth.refresh_access_token(token_info["refresh_token"])
@@ -50,19 +49,8 @@ mood = st.selectbox("🌈 Select a Mood:", [
     "Focus 🧠", "Party 🎉", "Sad ☔", "Romantic ❤️"
 ])
 
-mood_targets = {
-    "Happy 😄": {"target_valence": 0.9, "target_energy": 0.7, "target_danceability": 0.7},
-    "Chill 😌": {"target_valence": 0.5, "target_energy": 0.3, "target_danceability": 0.4},
-    "Energetic ⚡": {"target_energy": 0.9, "target_danceability": 0.8},
-    "Workout 💪": {"target_energy": 0.95, "target_tempo": 130, "target_danceability": 0.7},
-    "Focus 🧠": {"target_energy": 0.3, "target_instrumentalness": 0.8},
-    "Party 🎉": {"target_danceability": 0.9, "target_energy": 0.9, "target_valence": 0.8},
-    "Sad ☔": {"target_valence": 0.2, "target_energy": 0.4},
-    "Romantic ❤️": {"target_valence": 0.6, "target_energy": 0.5, "target_acousticness": 0.7}
-}
-
-if st.button("🔥 MIX IT!") and playlist_url:
-    with st.spinner("Spotify suggestions are being collected..."):
+if st.button("🔥 MIX IT! Create new vibe") and playlist_url:
+    with st.spinner("Remixing your playlist with fresh energy..."):
         try:
             match = re.search(r"playlist[/:]([A-Za-z0-9]{22})", playlist_url)
             if not match:
@@ -70,61 +58,41 @@ if st.button("🔥 MIX IT!") and playlist_url:
                 st.stop()
             playlist_id = match.group(1)
 
-            tracks = sp.playlist_tracks(playlist_id)["items"]
-            track_ids = [t["track"]["id"] for t in tracks if t["track"] and t["track"]["id"]]
+            # Tüm şarkıları al (100'den fazla varsa hepsini)
+            track_ids = []
+            results = sp.playlist_tracks(playlist_id)
+            track_ids.extend([item["track"]["id"] for item in results["items"] if item["track"] and item["track"]["id"]])
+            
+            while results["next"]:
+                results = sp.next(results)
+                track_ids.extend([item["track"]["id"] for item in results["items"] if item["track"] and item["track"]["id"]])
 
-            if len(track_ids) < 5:
-                st.error("The playlist must have at least 5 songs!")
+            if len(track_ids) < 3:
+                st.error("Not enough songs in the playlist!")
                 st.stop()
 
-            seed_tracks = random.sample(track_ids, 5)
-            targets = mood_targets[mood]
+            # Mood'a göre hafif sıralama (rastgele ama mood ismine göre seed)
+            random.seed(hash(mood))  # Aynı mood aynı sıralama
+            random.shuffle(track_ids)
 
-            # Global erişim için market="US" (en geniş katalog)
-            try:
-                recommendations = sp.recommendations(
-                    seed_tracks=seed_tracks,
-                    limit=50,
-                    market="US",
-                    **targets
-                )
-                rec_tracks = recommendations["tracks"]
-                if len(rec_tracks) > 0:
-                    st.info(f"Perfect global match for {mood}! 🌍🎯")
-                else:
-                    raise Exception("No results")
-            except:
-                # Fallback: Mood parametresiz, sadece benzer şarkılar (kesin çalışır)
-                st.info("Using global catalog for songs very similar to your playlist... 🌍😊")
-                recommendations = sp.recommendations(
-                    seed_tracks=seed_tracks,
-                    limit=50,
-                    market="US"
-                )
-                rec_tracks = recommendations["tracks"]
-
-            rec_ids = [track["id"] for track in rec_tracks]
-
-            if len(rec_ids) == 0:
-                st.error("No suggestions found even globally. Try another playlist!")
-                st.stop()
-
+            # Yeni playlist
             new_playlist = sp.user_playlist_create(
                 user["id"],
                 name=f"Mood Mix: {mood} 🎯",
                 public=True,
-                description="Prepared with Mood Mixer V2 🎧 https://mixer.alxishq.site"
+                description="Remixed with Mood Mixer V2 🎧 https://mixer.alxishq.site"
             )
 
-            for i in range(0, len(rec_ids), 100):
-                sp.playlist_add_items(new_playlist["id"], rec_ids[i:i+100])
+            # Şarkıları 100'erli ekle
+            for i in range(0, len(track_ids), 100):
+                sp.playlist_add_items(new_playlist["id"], track_ids[i:i+100])
 
-            st.success("✅ Your new playlist is ready!")
+            st.success("✅ Your remixed playlist is ready!")
             st.balloons()
-            st.markdown(f"### 🎶 **{new_playlist['name']}** ({len(rec_ids)} songs)")
+            st.markdown(f"### 🎶 **{new_playlist['name']}** ({len(track_ids)} songs)")
             st.markdown(f"→ [Open on Spotify]({new_playlist['external_urls']['spotify']})")
 
         except Exception as e:
-            st.error(f"Unexpected error: {str(e)}")
+            st.error(f"Error: {str(e)}")
 
 st.caption("Made with ❤️ by Sad_Always – Mood Mixer v2 A AlexisHq project.")
