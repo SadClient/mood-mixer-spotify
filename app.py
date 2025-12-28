@@ -4,10 +4,10 @@ from spotipy.oauth2 import SpotifyOAuth
 import re
 import random
 
-# Sayfa ayarları - daha modern ve alxishq tarzı
+# Sayfa ayarları
 st.set_page_config(page_title="Mood Mixer", page_icon="🎧", layout="centered")
 
-# Custom CSS - alxishq.site havası: temiz, modern, yeşil vurgular
+# Custom CSS + Animasyonlar + alxishq tarzı güzelleştirme
 st.markdown("""
     <style>
     .main {
@@ -52,10 +52,22 @@ st.markdown("""
     .caption {
         text-align: center;
         color: #b3b3b3;
-        font-size: 14px;
-        margin-top: 50px;
+        font-size: 16px;
+        margin-top: 60px;
+        font-weight: 500;
+    }
+    .caption strong {
+        color: #1DB954;
+        font-weight: bold;
     }
     </style>
+    """, unsafe_allow_html=True)
+
+# Üst animasyon - Spotify music player vibe
+st.markdown("""
+    <div style="text-align: center; margin-bottom: 30px;">
+        <img src="https://cdn.dribbble.com/userupload/24777404/file/original-7371fc0a0aa3cc7e00dc614a8d2b4071.gif" width="400" style="border-radius: 20px; box-shadow: 0 8px 30px rgba(29, 185, 84, 0.3);">
+    </div>
     """, unsafe_allow_html=True)
 
 st.title("🎧 Mood Mixer v2")
@@ -67,7 +79,7 @@ st.markdown("""
     </div>
     """, unsafe_allow_html=True)
 
-# OAuth
+# OAuth (aynı kaldı)
 sp_oauth = SpotifyOAuth(
     client_id=st.secrets["SPOTIFY_CLIENT_ID"],
     client_secret=st.secrets["SPOTIFY_CLIENT_SECRET"],
@@ -109,7 +121,6 @@ if "token_info" not in st.session_state:
         st.info("👆 Press the button above to connect (opens in new tab)")
         st.stop()
 
-# Token refresh
 token_info = st.session_state.token_info
 if sp_oauth.is_token_expired(token_info):
     token_info = sp_oauth.refresh_access_token(token_info["refresh_token"])
@@ -120,7 +131,7 @@ user = sp.current_user()
 
 st.success(f"✅ Connected: **{user['display_name']}**")
 
-# Kullanıcı arayüzü
+# Arayüz
 col1, col2 = st.columns(2)
 with col1:
     playlist_url = st.text_input("📋 Playlist link:", placeholder="https://open.spotify.com/playlist/...")
@@ -130,7 +141,6 @@ with col2:
         "Focus 🧠", "Party 🎉", "Sad ☔", "Romantic ❤️"
     ])
 
-# Yeni: Kullanıcı playlist ismini belirlesin
 custom_name = st.text_input("✨ New playlist name (optional):", 
                             placeholder="e.g. My Chill Vibes 🌙, Party Starter 🔥, Sad Hours ☔")
 
@@ -147,7 +157,6 @@ if st.button("🔥 MIX IT! Create new vibe"):
                 st.stop()
             playlist_id = match.group(1)
 
-            # Tüm şarkıları al (100+ için pagination)
             track_ids = []
             results = sp.playlist_tracks(playlist_id)
             track_ids.extend([item["track"]["id"] for item in results["items"] if item["track"] and item["track"]["id"]])
@@ -159,14 +168,11 @@ if st.button("🔥 MIX IT! Create new vibe"):
                 st.error("Not enough songs in the playlist!")
                 st.stop()
 
-            # Mood'a göre tekrarlanabilir shuffle
             random.seed(hash(mood) + hash(custom_name or ""))
             random.shuffle(track_ids)
 
-            # Playlist ismi: kullanıcı yazdıysa onu, yoksa otomatik
             playlist_name = custom_name.strip() or f"Mood Mix: {mood} 🎯"
 
-            # Yeni playlist oluştur
             new_playlist = sp.user_playlist_create(
                 user["id"],
                 name=playlist_name,
@@ -174,7 +180,6 @@ if st.button("🔥 MIX IT! Create new vibe"):
                 description="Remixed with Mood Mixer by Sad_Always 🎧 https://mixer.alxishq.site"
             )
 
-            # Şarkıları ekle
             for i in range(0, len(track_ids), 100):
                 sp.playlist_add_items(new_playlist["id"], track_ids[i:i+100])
 
@@ -186,9 +191,17 @@ if st.button("🔥 MIX IT! Create new vibe"):
         except Exception as e:
             st.error(f"Error: {str(e)}")
 
+# Alt animasyon - neon green equalizer wave (remix hissi için)
+st.markdown("""
+    <div style="text-align: center; margin: 40px 0;">
+        <img src="https://i.pinimg.com/originals/3b/5d/89/3b5d89de71c8b1c520749df21d815f63.gif" width="500" style="border-radius: 20px;">
+    </div>
+    """, unsafe_allow_html=True)
+
+# Güzelleştirilmiş alt yazı
 st.markdown("""
     <div class="caption">
-        Made with ❤️ by Sad_Always – A AlexisHq project.<br>
-        <a href="https://alxishq.site" style="color:#1DB954;">alxishq.site</a>
+        Made with ❤️ by <strong>Sad_Always</strong><br>
+        A <strong>AlexisHq</strong> project — <a href="https://alxishq.site" style="color:#1DB954; text-decoration: none; font-weight: bold;">alxishq.site</a>
     </div>
     """, unsafe_allow_html=True)
