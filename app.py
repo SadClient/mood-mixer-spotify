@@ -44,13 +44,16 @@ sp = spotipy.Spotify(auth=token_info["access_token"])
 user = sp.current_user()
 st.success(f"✅ Connected: **{user['display_name']}**")
 
+# Kullanıcı market (ülke) kodunu al - 404 hatasını çözmek için kritik!
+market = user.get("country", "US")  # Eğer alınamazsa US fallback
+
 playlist_url = st.text_input("📋 Playlist link:", placeholder="https://open.spotify.com/playlist/...")
 mood = st.selectbox("🌈 Select a Mood:", [
     "Happy 😄", "Chill 😌", "Energetic ⚡", "Workout 💪",
     "Focus 🧠", "Party 🎉", "Sad ☔", "Romantic ❤️"
 ])
 
-# Daha güvenli ve az parametre (sadece target'lar, 404 önlemek için)
+# Mood target parametreleri (seninkiler aynı kaldı)
 mood_targets = {
     "Happy 😄": {"target_valence": 0.9, "target_energy": 0.7, "target_danceability": 0.7},
     "Chill 😌": {"target_valence": 0.5, "target_energy": 0.3, "target_danceability": 0.4},
@@ -86,21 +89,33 @@ if st.button("🔥 MIX IT!") and playlist_url:
             # Mood parametreleri
             targets = mood_targets[mood]
 
-            # Recommendations çağrısı (güvenli şekilde)
+            # Ana çağrı: market + target parametrelerle
             recommendations = sp.recommendations(
                 seed_tracks=seed_tracks,
                 limit=50,
+                market=market,
                 **targets
             )
 
             rec_tracks = recommendations["tracks"]
             rec_ids = [track["id"] for track in rec_tracks]
 
+            # Eğer hiç öneri gelmezse fallback (sadece seed_tracks ile, mood'suz)
             if len(rec_ids) == 0:
-                st.error("No suggestions were found for this mood. Try a different playlist or mood.")
+                st.warning("No exact match found for this mood. Getting similar songs to your playlist...")
+                recommendations = sp.recommendations(
+                    seed_tracks=seed_tracks,
+                    limit=50,
+                    market=market
+                )
+                rec_tracks = recommendations["tracks"]
+                rec_ids = [track["id"] for track in rec_tracks]
+
+            if len(rec_ids) == 0:
+                st.error("No suggestions found. Try a different playlist.")
                 st.stop()
 
-            # Yeni playlist
+            # Yeni playlist oluştur
             new_playlist = sp.user_playlist_create(
                 user["id"],
                 name=f"Mood Mix: {mood} 🎯",
@@ -112,14 +127,15 @@ if st.button("🔥 MIX IT!") and playlist_url:
             for i in range(0, len(rec_ids), 100):
                 sp.playlist_add_items(new_playlist["id"], rec_ids[i:i+100])
 
-            st.success("✅ Yeni playlist hazır!")
+            st.success("✅ Your new playlist is ready!")
             st.balloons()
-            st.markdown(f"### 🎶 **{new_playlist['name']}** ({len(rec_ids)} şarkı)")
-            st.markdown(f"→ [Spotify'da Aç]({new_playlist['external_urls']['spotify']})")
+            st.markdown(f"### 🎶 **{new_playlist['name']}** ({len(rec_ids)} songs)")
+            st.markdown(f"→ [Open on Spotify]({new_playlist['external_urls']['spotify']})")
 
         except spotipy.SpotifyException as e:
-            st.error(f"Spotify hatası: {e.msg if hasattr(e, 'msg') else str(e)}")
+            st.error(f"Spotify error: {e.msg if hasattr(e, 'msg') else str(e)}")
+            st.info("Try a different mood or playlist.")
         except Exception as e:
-            st.error(f"Beklenmeyen hata: {str(e)}")
+            st.error(f"Unexpected error: {str(e)}")
 
 st.caption("Made with ❤️ by Sad_Always – Mood Mixer v2 A AlexisHq project.")
