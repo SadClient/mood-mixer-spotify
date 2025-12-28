@@ -64,14 +64,12 @@ mood_targets = {
 if st.button("🔥 MIX IT!") and playlist_url:
     with st.spinner("Spotify suggestions are being collected..."):
         try:
-            # Playlist ID çıkar
             match = re.search(r"playlist[/:]([A-Za-z0-9]{22})", playlist_url)
             if not match:
                 st.error("Invalid playlist link!")
                 st.stop()
             playlist_id = match.group(1)
 
-            # Şarkıları al
             tracks = sp.playlist_tracks(playlist_id)["items"]
             track_ids = [t["track"]["id"] for t in tracks if t["track"] and t["track"]["id"]]
 
@@ -82,34 +80,35 @@ if st.button("🔥 MIX IT!") and playlist_url:
             seed_tracks = random.sample(track_ids, 5)
             targets = mood_targets[mood]
 
-            # İlk deneme: target'lı çağrı (market olmadan)
+            # Global erişim için market="US" (en geniş katalog)
             try:
                 recommendations = sp.recommendations(
                     seed_tracks=seed_tracks,
                     limit=50,
+                    market="US",
                     **targets
                 )
                 rec_tracks = recommendations["tracks"]
                 if len(rec_tracks) > 0:
-                    st.info(f"Perfect match for {mood}! 🎯")
+                    st.info(f"Perfect global match for {mood}! 🌍🎯")
                 else:
                     raise Exception("No results")
             except:
-                # Fallback: sadece seed_tracks ile (en güvenilir yöntem)
-                st.info("Strong mood match not available. Getting songs very similar to your playlist... 😊")
+                # Fallback: Mood parametresiz, sadece benzer şarkılar (kesin çalışır)
+                st.info("Using global catalog for songs very similar to your playlist... 🌍😊")
                 recommendations = sp.recommendations(
                     seed_tracks=seed_tracks,
-                    limit=50
+                    limit=50,
+                    market="US"
                 )
                 rec_tracks = recommendations["tracks"]
 
             rec_ids = [track["id"] for track in rec_tracks]
 
             if len(rec_ids) == 0:
-                st.error("No suggestions found. Try a different playlist!")
+                st.error("No suggestions found even globally. Try another playlist!")
                 st.stop()
 
-            # Yeni playlist
             new_playlist = sp.user_playlist_create(
                 user["id"],
                 name=f"Mood Mix: {mood} 🎯",
@@ -117,7 +116,6 @@ if st.button("🔥 MIX IT!") and playlist_url:
                 description="Prepared with Mood Mixer V2 🎧 https://mixer.alxishq.site"
             )
 
-            # Şarkıları ekle
             for i in range(0, len(rec_ids), 100):
                 sp.playlist_add_items(new_playlist["id"], rec_ids[i:i+100])
 
@@ -128,6 +126,5 @@ if st.button("🔥 MIX IT!") and playlist_url:
 
         except Exception as e:
             st.error(f"Unexpected error: {str(e)}")
-            st.info("Try again with a different playlist or mood.")
 
 st.caption("Made with ❤️ by Sad_Always – Mood Mixer v2 A AlexisHq project.")
