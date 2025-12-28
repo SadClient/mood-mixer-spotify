@@ -1,6 +1,7 @@
 import streamlit as st
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
+import re  # Ekledim: Regex için gerekli
 
 # Sayfa ayarları
 st.set_page_config(page_title="Mood Mixer", page_icon="🎧", layout="centered")
@@ -92,8 +93,12 @@ mood_targets = {
 if st.button("🔥 MIX IT! Lets Do IT") and playlist_url:
     with st.spinner("The playlist is being analyzed and a new vibe is being created..."):
         try:
-            # Playlist ID çıkar
-            playlist_id = playlist_url.split("/")[-1].split("?")[0]
+            # Playlist ID çıkar (hem URL hem URI destekler) - GÜNCELLENDİ
+            match = re.search(r'(?:playlist/|playlist[:])([a-zA-Z0-9]+)', playlist_url)
+            if not match:
+                st.error("Geçersiz playlist linki! Lütfen doğru bir Spotify playlist URL'si veya URI'si yapıştırın.")
+                st.stop()
+            playlist_id = match.group(1)
             
             # Şarkıları al
             tracks = sp.playlist_tracks(playlist_id)["items"]
