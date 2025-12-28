@@ -44,8 +44,8 @@ sp = spotipy.Spotify(auth=token_info["access_token"])
 user = sp.current_user()
 st.success(f"✅ Connected: **{user['display_name']}**")
 
-# Kullanıcı market (ülke kodu) - 404'ü çözmek için zorunlu!
-market = user.get("country", "US")  # TR olmazsa US fallback
+# Market (ülke kodu) - 404 hatasını önlemek için zorunlu
+market = user.get("country", "US")  # TR yoksa US fallback
 
 playlist_url = st.text_input("📋 Playlist link:", placeholder="https://open.spotify.com/playlist/...")
 mood = st.selectbox("🌈 Select a Mood:", [
@@ -53,7 +53,6 @@ mood = st.selectbox("🌈 Select a Mood:", [
     "Focus 🧠", "Party 🎉", "Sad ☔", "Romantic ❤️"
 ])
 
-# Mood target parametreleri (seninkiler aynı)
 mood_targets = {
     "Happy 😄": {"target_valence": 0.9, "target_energy": 0.7, "target_danceability": 0.7},
     "Chill 😌": {"target_valence": 0.5, "target_energy": 0.3, "target_danceability": 0.4},
@@ -68,14 +67,12 @@ mood_targets = {
 if st.button("🔥 MIX IT!") and playlist_url:
     with st.spinner("Spotify suggestions are being collected..."):
         try:
-            # Playlist ID çıkar
             match = re.search(r"playlist[/:]([A-Za-z0-9]{22})", playlist_url)
             if not match:
                 st.error("Invalid playlist link!")
                 st.stop()
             playlist_id = match.group(1)
 
-            # Şarkıları al
             tracks = sp.playlist_tracks(playlist_id)["items"]
             track_ids = [t["track"]["id"] for t in tracks if t["track"] and t["track"]["id"]]
 
@@ -83,13 +80,10 @@ if st.button("🔥 MIX IT!") and playlist_url:
                 st.error("The playlist must have at least 5 songs!")
                 st.stop()
 
-            # 5 rastgele seed
             seed_tracks = random.sample(track_ids, 5)
-
-            # Mood parametreleri
             targets = mood_targets[mood]
 
-            # İlk deneme: Mood target'larla + market
+            # İlk deneme: Mood target'larla
             try:
                 recommendations = sp.recommendations(
                     seed_tracks=seed_tracks,
@@ -97,23 +91,27 @@ if st.button("🔥 MIX IT!") and playlist_url:
                     market=market,
                     **targets
                 )
+                rec_tracks = recommendations["tracks"]
+                if len(rec_tracks) > 0:
+                    st.info(f"Perfect match for {mood}! 🎯")
+                else:
+                    raise spotipy.SpotifyException(404, -1, "No results")
             except spotipy.SpotifyException:
-                # Fallback: Sadece seed_tracks ile (mood parametresiz, daha güvenilir)
-                st.info("Exact mood match not strong enough. Getting songs similar to your playlist...")
+                # Fallback: Sadece seed_tracks ile benzer şarkılar
+                st.info("Strong mood match not available in your region. Getting songs very similar to your playlist instead... 😊")
                 recommendations = sp.recommendations(
                     seed_tracks=seed_tracks,
                     limit=50,
                     market=market
                 )
+                rec_tracks = recommendations["tracks"]
 
-            rec_tracks = recommendations["tracks"]
             rec_ids = [track["id"] for track in rec_tracks]
 
             if len(rec_ids) == 0:
-                st.error("No suggestions found. Try a different playlist or mood.")
+                st.error("No suggestions found even with fallback. Try a different playlist!")
                 st.stop()
 
-            # Yeni playlist
             new_playlist = sp.user_playlist_create(
                 user["id"],
                 name=f"Mood Mix: {mood} 🎯",
@@ -121,7 +119,6 @@ if st.button("🔥 MIX IT!") and playlist_url:
                 description="Prepared with Mood Mixer V2 🎧 https://mixer.alxishq.site"
             )
 
-            # Şarkıları ekle
             for i in range(0, len(rec_ids), 100):
                 sp.playlist_add_items(new_playlist["id"], rec_ids[i:i+100])
 
@@ -132,5 +129,6 @@ if st.button("🔥 MIX IT!") and playlist_url:
 
         except Exception as e:
             st.error(f"Unexpected error: {str(e)}")
+            st.info("Try again with a different mood or playlist.")
 
 st.caption("Made with ❤️ by Sad_Always – Mood Mixer v2 A AlexisHq project.")
